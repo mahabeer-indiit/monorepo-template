@@ -1,0 +1,26 @@
+{
+  "name": "@template/root",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fullstack MERN + React Native monorepo template",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "prettier": "^3.3.3",
+    "turbo": "^2.5.0",
+    "typescript": "^5.6.2"
+  }
+}
