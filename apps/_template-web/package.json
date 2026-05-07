@@ -1,0 +1,33 @@
+{
+  "name": "_template-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Template React + Vite web app — clone, rename, build",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@template/types": "workspace:*",
+    "@template/ui": "workspace:*",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "devDependencies": {
+    "@template/config-eslint": "workspace:*",
+    "@template/config-ts": "workspace:*",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.0.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.6.2",
+    "vite": "^8.0.10"
+  }
+}
