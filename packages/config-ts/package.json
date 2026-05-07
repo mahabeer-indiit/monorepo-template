@@ -1,0 +1,20 @@
+{
+  "name": "@template/config-ts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared TypeScript configurations for the monorepo",
+  "license": "UNLICENSED",
+  "files": [
+    "base.json",
+    "react.json",
+    "node.json",
+    "react-native.json",
+    "README.md"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./react.json": "./react.json",
+    "./node.json": "./node.json",
+    "./react-native.json": "./react-native.json"
+  }
+}
