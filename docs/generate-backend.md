@@ -35,7 +35,7 @@ For the rest of this guide, replace `<app-name>` with your name and `<org>` with
 ## 3. Create the folder structure
 
 ```bash
-mkdir -p apps/<app-name>/src/{config,features/hello}
+mkdir -p apps/<app-name>/{scripts,src/{config,lib,features/hello}}
 cd apps/<app-name>
 ```
 
@@ -43,29 +43,37 @@ The full layout you'll end up with:
 
 ```
 apps/<app-name>/
+├── .env.example
+├── .gitignore                ← gitignores src/generated/
 ├── CLAUDE.md
 ├── README.md
-├── .env.example
 ├── eslint.config.mjs
 ├── package.json
 ├── tsconfig.json
 ├── tsup.config.ts
+├── scripts/
+│   └── generate-swagger.ts   ← runs at build time → src/generated/swagger.json
 └── src/
-    ├── index.ts            ← server bootstrap (calls app.listen)
-    ├── app.ts              ← Express app: middleware + route mounts
+    ├── index.ts              ← server bootstrap (env + logger + listen)
+    ├── app.ts                ← Express app: middleware + route mounts
     ├── config/
-    │   └── swagger.ts      ← swagger-jsdoc config
+    │   ├── env.ts            ← zod-validated process.env, exits on bad config
+    │   └── swagger.ts        ← imports the pre-generated swagger.json
+    ├── generated/            ← gitignored; produced by `pnpm gen:swagger`
+    │   └── swagger.json
+    ├── lib/
+    │   └── logger.ts         ← pino — pretty in dev, JSON in prod
     └── features/
-        └── hello/          ← one folder per feature, never shared/
+        └── hello/            ← one folder per feature, never shared/
             ├── controller.ts
             ├── service.ts
             ├── routes.ts
-            ├── schema.ts   ← zod request validation
+            ├── schema.ts     ← zod request validation
             ├── types.ts
-            └── index.ts    ← public exports for this feature
+            └── index.ts      ← public exports for this feature
 ```
 
-> **Convention — feature-based structure (mandatory).** No top-level `src/controllers/`, `src/services/`, `src/routes/`. Everything lives under `src/features/<name>/`. Cross-cutting infra (Swagger config, db client) lives in `src/config/` or `src/lib/` — never `src/shared/`.
+> **Convention — feature-based structure (mandatory).** No top-level `src/controllers/`, `src/services/`, `src/routes/`. Everything lives under `src/features/<name>/`. Cross-cutting infra (env loader, swagger glue, db client) lives in `src/config/` or `src/lib/` — never `src/shared/`.
 
 > **Coupling rule.** Code stays inside its feature folder until it's used by **2 or more** features. When that happens, lift it: app-internal helpers go to `src/lib/`; cross-app code goes to a new `packages/<name>` workspace. Don't preemptively create shared abstractions for "future reuse."
 
@@ -81,9 +89,10 @@ Create `apps/<app-name>/package.json`:
   "type": "module",
   "description": "<one-line purpose of this service>",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsup",
+    "dev": "pnpm gen:swagger && tsx watch src/index.ts",
+    "build": "pnpm gen:swagger && tsup",
     "start": "node dist/index.js",
+    "gen:swagger": "tsx scripts/generate-swagger.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -91,7 +100,9 @@ Create `apps/<app-name>/package.json`:
     "@template/types": "workspace:*",
     "cors": "^2.8.5",
     "express": "^4.21.0",
+    "express-async-errors": "^3.1.1",
     "helmet": "^8.0.0",
+    "pino": "^9.5.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^3.23.8"
@@ -104,6 +115,7 @@ Create `apps/<app-name>/package.json`:
     "@types/node": "^20.14.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
+    "pino-pretty": "^11.3.0",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.2"
@@ -111,9 +123,24 @@ Create `apps/<app-name>/package.json`:
 }
 ```
 
-> **Why these scripts?** `dev` uses `tsx` for hot reload; `build` produces a `dist/` artifact via `tsup` (single bundle, fast); `start` runs the **built** artifact (production parity); `lint`/`typecheck` plug into Turbo's pipeline.
+> **Why these scripts?**
+> - `gen:swagger` runs the build-time scanner (step 10) and writes `src/generated/swagger.json`.
+> - `dev` runs it once, then hot-reloads via `tsx watch`. Editing `routes.ts` annotations does **not** auto-regenerate the JSON — re-run `pnpm gen:swagger` (or restart `dev`) to see the changes in `/api/docs`.
+> - `build` produces a `dist/` artifact via `tsup` (single bundle, fast). The Swagger JSON is generated **before** bundling so it's available in production with no source files on disk.
+> - `start` runs the **built** artifact (production parity); never `tsx` or `ts-node` in production.
 
-## 5. `tsconfig.json`
+## 5. Run `pnpm install`
+
+```bash
+# from repo root
+pnpm install
+```
+
+This links the workspace deps (`@template/types`, `@template/config-ts`, `@template/config-eslint`) and downloads everything else.
+
+> **🔁 Anytime you change `package.json`** — adding a dep, bumping a version, renaming a script — run `pnpm install` from the repo root again. The workspace state needs to reflect the manifest before any other command will work.
+
+## 6. `tsconfig.json`
 
 ```json
 {
@@ -122,7 +149,7 @@ Create `apps/<app-name>/package.json`:
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src"]
+  "include": ["src", "scripts"]
 }
 ```
 
@@ -138,7 +165,7 @@ import { helloService } from './service';
 
 `tsx` (dev) and `tsup` (build) both honor this. Don't fight it.
 
-## 6. `eslint.config.mjs`
+## 7. `eslint.config.mjs`
 
 ```js
 import config from '@template/config-eslint/node.mjs';
@@ -148,7 +175,7 @@ export default config;
 
 That's it. The shared preset gives you `@typescript-eslint`, `eslint-plugin-import` (with `import/order` + `import/no-cycle`), `eslint-plugin-unused-imports`, Prettier compatibility, and the **no-`.js`-files-in-`src/`** rule.
 
-## 7. `tsup.config.ts`
+## 8. `tsup.config.ts`
 
 ```ts
 import { defineConfig } from 'tsup';
@@ -166,77 +193,39 @@ export default defineConfig({
 });
 ```
 
-`tsup` produces `dist/index.js` from a single entry. Only the production path runs the bundled output — never `tsx` or `ts-node` in production (see [`docs/deployment.md`](./deployment.md)).
+`tsup` produces `dist/index.js` from a single entry. JSON imports (like the generated Swagger spec) are inlined automatically.
 
-## 8. `src/index.ts` — server bootstrap
+## 9. `apps/<app-name>/.gitignore`
 
-Keep this file tiny. It only owns process-level concerns: port binding, signal handlers.
+```gitignore
+# Build output
+dist/
 
-```ts
-import { app } from './app.js';
+# Generated at build time — see scripts/generate-swagger.ts
+src/generated/
 
-const PORT = Number(process.env.PORT ?? 3000);
-
-const server = app.listen(PORT, () => {
-  console.log(`API listening on http://localhost:${PORT}`);
-  console.log(`Swagger docs at http://localhost:${PORT}/api/docs`);
-});
-
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down');
-  server.close(() => process.exit(0));
-});
+# TypeScript incremental
+*.tsbuildinfo
 ```
 
-## 9. `src/app.ts` — Express app
+`src/generated/` is **never** committed — it's a build artifact derived from the source annotations. Anyone running `pnpm gen:swagger` or `pnpm build` reproduces it from scratch.
+
+## 10. `scripts/generate-swagger.ts` — build-time spec generator
+
+Globbing source files at runtime breaks in production (the `.ts` files don't exist after `tsup` bundles to `dist/index.js`). Instead, scan the sources at **build time** and emit a static JSON file.
 
 ```ts
-import cors from 'cors';
-import express from 'express';
-import helmet from 'helmet';
-import swaggerUi from 'swagger-ui-express';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { swaggerSpec } from './config/swagger.js';
-import { helloRoutes } from './features/hello/index.js';
-
-export const app = express();
-
-app.use(helmet());
-app.use(cors());
-app.use(express.json({ limit: '1mb' }));
-
-// Swagger docs UI — never inside /api/v1
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// All API routes mounted under /api/v1 — versioning is mandatory
-app.use('/api/v1/hello', helloRoutes);
-
-// 404 fallthrough
-app.use((_req, res) => {
-  res.status(404).json({
-    error: { code: 'NOT_FOUND', message: 'Route not found' },
-  });
-});
-
-// Error handler — keep this LAST
-app.use(
-  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    console.error(err);
-    res.status(500).json({
-      error: { code: 'INTERNAL', message: 'Unexpected server error' },
-    });
-  },
-);
-```
-
-> **API versioning rule.** Every route is mounted under `/api/v1/...`. There are **no unversioned routes**, ever. When you bump to v2, run v1 and v2 in parallel for the deprecation window — never break v1 in place.
-
-## 10. `src/config/swagger.ts` — Swagger setup
-
-```ts
 import swaggerJsdoc from 'swagger-jsdoc';
 
-export const swaggerSpec = swaggerJsdoc({
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
+
+const spec = swaggerJsdoc({
   definition: {
     openapi: '3.0.3',
     info: {
@@ -246,16 +235,206 @@ export const swaggerSpec = swaggerJsdoc({
     },
     servers: [{ url: '/api/v1', description: 'v1' }],
   },
-  // Pick up @openapi JSDoc blocks from every feature's routes + schemas
-  apis: ['./src/features/**/routes.ts', './src/features/**/schema.ts'],
+  apis: [
+    path.resolve(projectRoot, 'src/features/**/routes.ts'),
+    path.resolve(projectRoot, 'src/features/**/schema.ts'),
+  ],
+});
+
+const outDir = path.resolve(projectRoot, 'src/generated');
+mkdirSync(outDir, { recursive: true });
+
+const outPath = path.resolve(outDir, 'swagger.json');
+writeFileSync(outPath, `${JSON.stringify(spec, null, 2)}\n`);
+
+console.log(`✓ Swagger spec written to ${path.relative(projectRoot, outPath)}`);
+```
+
+Test it:
+
+```bash
+pnpm gen:swagger
+# → ✓ Swagger spec written to src/generated/swagger.json
+```
+
+The first run will fail until step 16 creates the `routes.ts` and `schema.ts` files for the `hello` feature. That's expected — the script just needs the globs to match something. Re-run after step 16.
+
+## 11. `src/config/env.ts` — validated environment
+
+Boot fails fast with a clear error if any required env var is missing or malformed. Other modules import the typed `env` object instead of touching `process.env` directly.
+
+```ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().positive().default(3000),
+
+  // Comma-separated allowlist of origins permitted to call this API.
+  // Examples: "http://localhost:5173" or "https://app.example.com,https://admin.example.com"
+  // Use "*" for any origin — DEVELOPMENT ONLY, never in production.
+  CORS_ORIGINS: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((s) =>
+      s
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
+
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+});
+
+const parsed = envSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  console.error('❌ Invalid environment variables:');
+  console.error(parsed.error.flatten().fieldErrors);
+  process.exit(1);
+}
+
+export const env = parsed.data;
+export type Env = typeof env;
+```
+
+> **Env validation rule.** Never read `process.env.X` directly outside this file. Always go through the typed `env` object. Adding a new var means adding it to the schema **first** — that's the only way it stays type-safe and validated.
+
+## 12. `src/lib/logger.ts` — pino logger
+
+```ts
+import pino from 'pino';
+
+import { env } from '../config/env.js';
+
+export const logger = pino({
+  level: env.LOG_LEVEL,
+  // Pretty output in dev only. In prod we want JSON for log aggregators.
+  ...(env.NODE_ENV === 'development' && {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'HH:MM:ss.l',
+        ignore: 'pid,hostname',
+      },
+    },
+  }),
 });
 ```
 
-> **Mandatory rule.** Every endpoint **must** carry an `@openapi` JSDoc block on its route handler. Reviewers reject PRs that add a route without one. Internal/admin routes are not exempt.
+> **Logging rule.** Use `logger.info` / `logger.warn` / `logger.error` throughout the app. **No `console.log` in committed code** — logger gives you levels, structured fields, request correlation IDs (when you wire them later), and JSON output for prod aggregators. The only exception is `src/config/env.ts`, which has to use `console.error` because the logger isn't loaded yet.
 
-The Swagger UI is served at `/api/docs`. CI can also dump `swaggerSpec` to JSON for contract tests against the FE.
+## 13. `src/index.ts` — server bootstrap
 
-## 11. Reference feature: `hello`
+Keep this file tiny. It only owns process-level concerns: port binding, signal handlers.
+
+```ts
+import { app } from './app.js';
+import { env } from './config/env.js';
+import { logger } from './lib/logger.js';
+
+const server = app.listen(env.PORT, () => {
+  logger.info(`API listening on http://localhost:${env.PORT}`);
+  logger.info(`Swagger docs at http://localhost:${env.PORT}/api/docs`);
+});
+
+const shutdown = (signal: string) => () => {
+  logger.info({ signal }, 'shutdown signal received');
+  server.close(() => process.exit(0));
+};
+
+process.on('SIGTERM', shutdown('SIGTERM'));
+process.on('SIGINT', shutdown('SIGINT'));
+```
+
+## 14. `src/app.ts` — Express app
+
+```ts
+// Patches Express to forward async errors to the error middleware automatically.
+// MUST be imported before any router that contains async handlers.
+import 'express-async-errors';
+
+import cors from 'cors';
+import express from 'express';
+import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
+
+import { env } from './config/env.js';
+import { swaggerSpec } from './config/swagger.js';
+import { helloRoutes } from './features/hello/index.js';
+import { logger } from './lib/logger.js';
+
+export const app = express();
+
+app.use(helmet());
+
+// CORS allowlist — origin function rejects anything not in CORS_ORIGINS.
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // No origin header → same-origin or non-browser caller (curl, server-to-server). Allow.
+      if (!origin) return callback(null, true);
+      if (env.CORS_ORIGINS.includes('*')) return callback(null, true);
+      if (env.CORS_ORIGINS.includes(origin)) return callback(null, true);
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
+  }),
+);
+
+app.use(express.json({ limit: '1mb' }));
+
+// Swagger docs UI — never inside /api/v1
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// All API routes mounted under /api/v1 — versioning is mandatory
+app.use('/api/v1/hello', helloRoutes);
+
+// 404 fallthrough — keep above the error handler
+app.use((_req, res) => {
+  res.status(404).json({
+    error: { code: 'NOT_FOUND', message: 'Route not found' },
+  });
+});
+
+// Error handler — keep this LAST. With `express-async-errors` imported above,
+// promise rejections inside async route handlers reach this middleware automatically.
+app.use(
+  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    logger.error({ err }, 'unhandled request error');
+
+    // CORS rejection from the origin function above — translate to a 403.
+    if (err.message?.startsWith('CORS:')) {
+      return res.status(403).json({
+        error: { code: 'CORS_FORBIDDEN', message: err.message },
+      });
+    }
+
+    return res.status(500).json({
+      error: { code: 'INTERNAL', message: 'Unexpected server error' },
+    });
+  },
+);
+```
+
+> **API versioning rule.** Every route is mounted under `/api/v1/...`. There are **no unversioned routes**, ever. When you bump to v2, run v1 and v2 in parallel for the deprecation window — never break v1 in place.
+
+> **CORS rule.** `CORS_ORIGINS` in `.env` is the allowlist. Add your frontend's URL there (e.g., `http://localhost:5173` for the Vite dev server, the production CDN URL for prod). **Never ship `*` to production.**
+
+## 15. `src/config/swagger.ts` — load the generated spec
+
+```ts
+import swagger from '../generated/swagger.json' with { type: 'json' };
+
+export const swaggerSpec = swagger;
+```
+
+That's the entire file. The heavy lifting happened in `scripts/generate-swagger.ts` at build time. At runtime, this is a static JSON import — no glob, no I/O, no race with bundling.
+
+> **Mandatory rule.** Every endpoint **must** carry an `@openapi` JSDoc block on its route handler or schema. Reviewers reject PRs that add a route without one. Internal/admin routes are not exempt. The build-time scan picks up every `@openapi` block in `src/features/**/{routes,schema}.ts`.
+
+## 16. Reference feature: `hello`
 
 This is the canonical feature. Copy this folder when creating a new feature, then rename and gut the contents.
 
@@ -355,6 +534,8 @@ export const helloController = {
 
 Controllers are **thin** — parse, call service, format response. No business logic.
 
+> **Async handlers.** When the service or controller becomes async (e.g., a DB call), just write `async (req, res) => { ... }`. Thanks to `express-async-errors` (imported once in `src/app.ts`), thrown errors and rejected promises are forwarded to the error middleware automatically — no per-route `try/catch` boilerplate, no `next(err)` plumbing.
+
 ### `src/features/hello/routes.ts` — routing + Swagger annotations
 
 This is where the Swagger annotations live. **One `@openapi` block per route**, no exceptions.
@@ -441,7 +622,7 @@ export type { HelloResponse } from './types.js';
 
 Other features (and `app.ts`) import only from `'./features/hello/index.js'` — never reach into `controller.ts`, `service.ts`, etc. directly. The barrel is the public API.
 
-## 12. `apps/<app-name>/CLAUDE.md`
+## 17. `apps/<app-name>/CLAUDE.md`
 
 App-specific context. The repo's root [`CLAUDE.md`](../CLAUDE.md) covers cross-cutting standards; this file is owned by the app's devs and fills in service-specific details (database, auth flow, environment).
 
@@ -479,22 +660,28 @@ App-specific context. The repo's root [`CLAUDE.md`](../CLAUDE.md) covers cross-c
 
 Start with empty section bodies — fill them as the service grows. Empty headers are a forcing function.
 
-## 13. `.env.example`
+## 18. `.env.example`
 
 ```bash
 # Server
 PORT=3000
 NODE_ENV=development
+LOG_LEVEL=info
 
-# Add other expected vars here as the service grows.
+# CORS — comma-separated list of origins permitted to call this API.
+# Add your frontend's URL here (e.g., http://localhost:5173 for the Vite dev server,
+# https://app.example.com for prod). Use "*" for any origin — DEV ONLY.
+CORS_ORIGINS=http://localhost:5173
+
+# Add other expected vars here as the service grows. Mirror them in src/config/env.ts.
 # Never commit .env (root .gitignore covers it).
 ```
 
 The actual `.env` stays untracked. CI loads its values from the platform's secret store, not from a file.
 
-## 14. `apps/<app-name>/README.md`
+## 19. `apps/<app-name>/README.md`
 
-```md
+````md
 # <app-name>
 
 Express + TypeScript backend service in the monorepo.
@@ -511,20 +698,21 @@ Open <http://localhost:3000/api/docs> for Swagger UI.
 
 ## Scripts
 
-| Command       | What it does                       |
-| ------------- | ---------------------------------- |
-| `pnpm dev`    | Hot-reload via `tsx watch`         |
-| `pnpm build`  | Bundle to `dist/` via `tsup`       |
-| `pnpm start`  | Run the built `dist/index.js`      |
-| `pnpm lint`   | ESLint                             |
-| `pnpm typecheck` | `tsc --noEmit`                  |
+| Command            | What it does                                              |
+| ------------------ | --------------------------------------------------------- |
+| `pnpm dev`         | `gen:swagger` + `tsx watch` (hot reload)                  |
+| `pnpm build`       | `gen:swagger` + `tsup` → `dist/`                          |
+| `pnpm start`       | Run the built `dist/index.js`                             |
+| `pnpm gen:swagger` | Regenerate `src/generated/swagger.json` from annotations  |
+| `pnpm lint`        | ESLint                                                    |
+| `pnpm typecheck`   | `tsc --noEmit`                                            |
 
 ## Conventions
 
 See the root [CLAUDE.md](../../CLAUDE.md) and [docs/generate-backend.md](../../docs/generate-backend.md). Don't deviate — the structure is enforced.
-```
+````
 
-## 15. Verification
+## 20. Verification
 
 From the repo root:
 
@@ -532,7 +720,7 @@ From the repo root:
 # 1. Install — should detect the new workspace project
 pnpm install
 
-# 2. Run dev — should hot-reload
+# 2. Run dev — should generate swagger.json then hot-reload
 pnpm --filter @<org>/<app-name> dev
 ```
 
@@ -558,7 +746,19 @@ curl -s -X POST http://localhost:3000/api/v1/hello \
 
 Then visit <http://localhost:3000/api/docs> — Swagger UI should render with the `Hello` tag, both routes, and the `HelloRequest` schema.
 
-Finally, the full build/lint/typecheck sweep:
+Verify the **production path** also works:
+
+```bash
+pnpm --filter @<org>/<app-name> build
+pnpm --filter @<org>/<app-name> start
+# in another terminal — Swagger UI should still render at /api/docs
+curl -s http://localhost:3000/api/docs/swagger.json | jq '.info.title'
+# → "<app-name>"
+```
+
+This proves the Swagger spec made it into the bundle (no source-file glob at runtime).
+
+Finally, the full sweep:
 
 ```bash
 pnpm turbo build lint typecheck --filter=@<org>/<app-name>
@@ -575,7 +775,12 @@ Pin this somewhere visible:
 - ✅ Feature-based folder structure — **no `controllers/`, `services/`, `routes/` at app root**
 - ✅ Coupling rule — keep code inside the feature until **2+ features** need it
 - ✅ Every endpoint has `@openapi` JSDoc — **PRs without it fail review**
+- ✅ Swagger spec is **generated at build time** to `src/generated/swagger.json` (gitignored). No runtime globbing.
 - ✅ Every request body / query / param goes through a **zod schema** before reaching the controller
+- ✅ All env vars validated by the zod schema in **`src/config/env.ts`** — never read `process.env` directly elsewhere
+- ✅ `import 'express-async-errors';` at the top of `src/app.ts` — async handler rejections reach the error middleware automatically
+- ✅ `CORS_ORIGINS` is an allowlist — **never ship `*` to production**
+- ✅ Use **`logger.info` / `logger.warn` / `logger.error`** — no `console.log` in committed code
 - ✅ Domain types come from `@template/types` — **never redefine** `User`, `Order`, etc.
 - ✅ All routes mounted under `/api/v1` — **no unversioned routes**
 - ✅ Errors return `{ error: { code, message, details? } }` with the right HTTP status
