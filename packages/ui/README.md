@@ -17,11 +17,11 @@ The component code lives in `src/components/ui/` and is **owned by this repo** â
 // apps/web/package.json
 {
   "dependencies": {
-    "@template/ui": "workspace:*"
+    "@template/ui": "workspace:*",
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.0"
-  }
+    "tailwindcss": "^3.4.0",
+  },
 }
 ```
 
@@ -38,10 +38,7 @@ import uiPreset from '@template/ui/tailwind.preset';
 
 export default {
   presets: [uiPreset],
-  content: [
-    './src/**/*.{ts,tsx}',
-    '../../packages/ui/src/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
 } satisfies Config;
 ```
 

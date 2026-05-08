@@ -22,15 +22,18 @@ Format — bullet-style, no prose paragraphs:
 # Login spec
 
 ## Setup
+
 - User exists with email `qa@example.com`, password `correct-horse`
 
 ## Happy path
+
 - Visit `/login`
 - Fill email, fill password, click "Sign in"
 - Redirected to `/dashboard`
 - Header shows user's email
 
 ## Wrong password
+
 - Visit `/login`
 - Fill email, fill wrong password, click "Sign in"
 - Stays on `/login`
@@ -38,6 +41,7 @@ Format — bullet-style, no prose paragraphs:
 - No request to `/dashboard`
 
 ## Empty fields
+
 - Visit `/login`
 - Click "Sign in" without filling fields
 - Both fields show "Required"

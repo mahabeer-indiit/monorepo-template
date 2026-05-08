@@ -49,13 +49,7 @@ export default [
         {
           // No 'type' group — type imports interleave naturally with their
           // value-import counterparts (sorted by source within each group).
-          groups: [
-            'builtin',
-            'external',
-            'internal',
-            ['parent', 'sibling', 'index'],
-            'object',
-          ],
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'object'],
           'newlines-between': 'always',
           alphabetize: { order: 'asc', caseInsensitive: true },
         },
@@ -85,8 +79,7 @@ export default [
         'error',
         {
           selector: 'Program',
-          message:
-            'JavaScript files are not allowed in src/. Use TypeScript (.ts / .tsx) instead.',
+          message: 'JavaScript files are not allowed in src/. Use TypeScript (.ts / .tsx) instead.',
         },
       ],
     },

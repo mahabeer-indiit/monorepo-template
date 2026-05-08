@@ -22,11 +22,11 @@ git status        # clean
 
 Use **kebab-case**. The name shows up in three places:
 
-| Where                     | Form                          | Example                |
-| ------------------------- | ----------------------------- | ---------------------- |
-| Folder                    | kebab-case                    | `apps/user-api`        |
-| `package.json#name`       | `@<org>/<name>`               | `@template/user-api`   |
-| `pnpm --filter` target    | matches package name          | `--filter @template/user-api` |
+| Where                  | Form                 | Example                       |
+| ---------------------- | -------------------- | ----------------------------- |
+| Folder                 | kebab-case           | `apps/user-api`               |
+| `package.json#name`    | `@<org>/<name>`      | `@template/user-api`          |
+| `pnpm --filter` target | matches package name | `--filter @template/user-api` |
 
 Pick a name that says **what the service owns**, not its tech: `user-api`, `billing-api`, `notifications-api` — not `node-server`, `backend2`.
 
@@ -124,6 +124,7 @@ Create `apps/<app-name>/package.json`:
 ```
 
 > **Why these scripts?**
+>
 > - `gen:swagger` runs the build-time scanner (step 10) and writes `src/generated/swagger.json`.
 > - `dev` runs it once, then hot-reloads via `tsx watch`. Editing `routes.ts` annotations does **not** auto-regenerate the JSON — re-run `pnpm gen:swagger` (or restart `dev`) to see the changes in `/api/docs`.
 > - `build` produces a `dist/` artifact via `tsup` (single bundle, fast). The Swagger JSON is generated **before** bundling so it's available in production with no source files on disk.
@@ -400,22 +401,20 @@ app.use((_req, res) => {
 
 // Error handler — keep this LAST. With `express-async-errors` imported above,
 // promise rejections inside async route handlers reach this middleware automatically.
-app.use(
-  (err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-    logger.error({ err }, 'unhandled request error');
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error({ err }, 'unhandled request error');
 
-    // CORS rejection from the origin function above — translate to a 403.
-    if (err.message?.startsWith('CORS:')) {
-      return res.status(403).json({
-        error: { code: 'CORS_FORBIDDEN', message: err.message },
-      });
-    }
-
-    return res.status(500).json({
-      error: { code: 'INTERNAL', message: 'Unexpected server error' },
+  // CORS rejection from the origin function above — translate to a 403.
+  if (err.message?.startsWith('CORS:')) {
+    return res.status(403).json({
+      error: { code: 'CORS_FORBIDDEN', message: err.message },
     });
-  },
-);
+  }
+
+  return res.status(500).json({
+    error: { code: 'INTERNAL', message: 'Unexpected server error' },
+  });
+});
 ```
 
 > **API versioning rule.** Every route is mounted under `/api/v1/...`. There are **no unversioned routes**, ever. When you bump to v2, run v1 and v2 in parallel for the deprecation window — never break v1 in place.
@@ -698,14 +697,14 @@ Open <http://localhost:3000/api/docs> for Swagger UI.
 
 ## Scripts
 
-| Command            | What it does                                              |
-| ------------------ | --------------------------------------------------------- |
-| `pnpm dev`         | `gen:swagger` + `tsx watch` (hot reload)                  |
-| `pnpm build`       | `gen:swagger` + `tsup` → `dist/`                          |
-| `pnpm start`       | Run the built `dist/index.js`                             |
-| `pnpm gen:swagger` | Regenerate `src/generated/swagger.json` from annotations  |
-| `pnpm lint`        | ESLint                                                    |
-| `pnpm typecheck`   | `tsc --noEmit`                                            |
+| Command            | What it does                                             |
+| ------------------ | -------------------------------------------------------- |
+| `pnpm dev`         | `gen:swagger` + `tsx watch` (hot reload)                 |
+| `pnpm build`       | `gen:swagger` + `tsup` → `dist/`                         |
+| `pnpm start`       | Run the built `dist/index.js`                            |
+| `pnpm gen:swagger` | Regenerate `src/generated/swagger.json` from annotations |
+| `pnpm lint`        | ESLint                                                   |
+| `pnpm typecheck`   | `tsc --noEmit`                                           |
 
 ## Conventions
 

@@ -39,7 +39,7 @@ Change the workspace root's name from `@template/root` to your org's equivalent 
 
 ```jsonc
 {
-  "name": "@<your-org>/root"
+  "name": "@<your-org>/root",
 }
 ```
 

@@ -18,6 +18,9 @@
     "./node.mjs": "./node.mjs",
     "./react-native.mjs": "./react-native.mjs"
   },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0"
+  },
   "peerDependencies": {
     "eslint": "^9.0.0",
     "typescript": ">=5.0.0"

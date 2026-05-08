@@ -4,12 +4,12 @@ Shared **ESLint 9 (flat config)** presets for the monorepo. Each preset is a com
 
 ## Available presets
 
-| Preset                                     | Use for                                       | Built on                                       |
-| ------------------------------------------ | --------------------------------------------- | ---------------------------------------------- |
-| `@template/config-eslint/base.mjs`         | Generic TS/JS code, shared packages           | `@eslint/js` + `typescript-eslint`             |
-| `@template/config-eslint/react.mjs`        | React web apps                                | base + `react`, `react-hooks`, `jsx-a11y`      |
-| `@template/config-eslint/node.mjs`         | Node 20 backend services                      | base + Node globals                            |
-| `@template/config-eslint/react-native.mjs` | React Native / Expo apps                      | base + `react`, `react-hooks`, RN globals      |
+| Preset                                     | Use for                             | Built on                                  |
+| ------------------------------------------ | ----------------------------------- | ----------------------------------------- |
+| `@template/config-eslint/base.mjs`         | Generic TS/JS code, shared packages | `@eslint/js` + `typescript-eslint`        |
+| `@template/config-eslint/react.mjs`        | React web apps                      | base + `react`, `react-hooks`, `jsx-a11y` |
+| `@template/config-eslint/node.mjs`         | Node 20 backend services            | base + Node globals                       |
+| `@template/config-eslint/react-native.mjs` | React Native / Expo apps            | base + `react`, `react-hooks`, RN globals |
 
 All presets include:
 
@@ -29,8 +29,8 @@ Add the workspace package as a dev dependency:
   "devDependencies": {
     "@template/config-eslint": "workspace:*",
     "eslint": "^9.0.0",
-    "typescript": "^5.6.0"
-  }
+    "typescript": "^5.6.0",
+  },
 }
 ```
 

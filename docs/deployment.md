@@ -32,14 +32,16 @@ location /assets/ {
 ```js
 // ecosystem.config.cjs
 module.exports = {
-  apps: [{
-    name: 'api',
-    script: 'dist/index.js',
-    cwd: '/var/www/api',
-    instances: 'max',
-    exec_mode: 'cluster',
-    env: { NODE_ENV: 'production' },
-  }],
+  apps: [
+    {
+      name: 'api',
+      script: 'dist/index.js',
+      cwd: '/var/www/api',
+      instances: 'max',
+      exec_mode: 'cluster',
+      env: { NODE_ENV: 'production' },
+    },
+  ],
 };
 ```
 

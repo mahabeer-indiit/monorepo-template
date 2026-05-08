@@ -65,13 +65,26 @@ importers:
         specifier: ^5.6.2
         version: 5.9.3
 
-  packages/config-ts: {}
+  packages/config-ts:
+    devDependencies:
+      '@template/config-eslint':
+        specifier: workspace:*
+        version: link:../config-eslint
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.4(jiti@1.21.7)
 
   packages/types:
     devDependencies:
+      '@template/config-eslint':
+        specifier: workspace:*
+        version: link:../config-eslint
       '@template/config-ts':
         specifier: workspace:*
         version: link:../config-ts
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.4(jiti@1.21.7)
       typescript:
         specifier: ^5.6.2
         version: 5.9.3
@@ -115,6 +128,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@template/config-eslint':
+        specifier: workspace:*
+        version: link:../config-eslint
       '@template/config-ts':
         specifier: workspace:*
         version: link:../config-ts
@@ -124,6 +140,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.3(@types/react@19.2.14)
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.4(jiti@1.21.7)
       react:
         specifier: ^19.0.0
         version: 19.2.6

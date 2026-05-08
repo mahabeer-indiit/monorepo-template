@@ -18,6 +18,7 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 - Inside each app: **feature-based** layout under `src/features/<name>/{components,api,types,forms,hooks,pages|screens,index.ts}`. No top-level `src/components/` or `src/api/` mixing concerns across features.
 
 > **Apps are NOT pre-generated.** When the team needs a new app, follow the matching guide:
+>
 > - Backend → [`docs/generate-backend.md`](./docs/generate-backend.md)
 > - Web → [`docs/generate-web.md`](./docs/generate-web.md)
 > - Mobile → [`docs/generate-mobile.md`](./docs/generate-mobile.md)
@@ -55,9 +56,9 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 ## 7. Git conventions
 
-- **Conventional Commits** — `<type>(<scope>): <subject>`. Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`.
+- **Conventional Commits** — `<type>(<scope>): <subject>`. Types: `feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`, `perf`, `build`, `ci`.
 - **Target 5–8 files per commit.** Split larger changes by layer or by feature. Each commit must build and pass tests on its own.
-- Branch naming: **`feature/<ticket>-<short-desc>`** (e.g. `feature/AUTH-142-login-page`). Branches go off **`dev`**, never `main`. Hotfixes are the only exception (see [`docs/branching-and-prs.md`](./docs/branching-and-prs.md)).
+- **Branch naming:** `<type>/<ticket>-<short-desc>` — for example, `feat/PROJ-123-add-login`. The `<type>` matches the Conventional Commits set above; `<ticket>` is the project's ticket id; `<short-desc>` is 2–5 words, kebab-case. Examples: `feat/PROJ-123-add-login`, `fix/PROJ-456-cart-duplicate-on-rapid-click`, `chore/PROJ-789-bump-react-query`, `docs/PROJ-321-update-readme`. Branches go off **`dev`**, never `main`. Hotfixes (`hotfix/<ticket>-<short-desc>`) are the only exception. Full rules in [`docs/branching-and-prs.md`](./docs/branching-and-prs.md).
 - Squash-merge by default. Rebase clean (`git rebase -i origin/dev`) before opening the PR.
 - Stage selectively with `git add -p` — never `git add .`. Use `/commit` to draft Conventional Commit messages.
 

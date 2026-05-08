@@ -4,12 +4,12 @@ Shared TypeScript configurations for apps and packages in this monorepo. Each pr
 
 ## Available configs
 
-| File                | Extend from                              | Use for                                              |
-| ------------------- | ---------------------------------------- | ---------------------------------------------------- |
-| `base.json`         | `@template/config-ts/base.json`          | Generic libraries, shared packages, anything neutral |
-| `react.json`        | `@template/config-ts/react.json`         | React web apps and component libraries (DOM + JSX)   |
-| `node.json`         | `@template/config-ts/node.json`          | Backend services / Node 20 packages (`NodeNext`)     |
-| `react-native.json` | `@template/config-ts/react-native.json`  | React Native / Expo apps (no DOM, RN types)          |
+| File                | Extend from                             | Use for                                              |
+| ------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `base.json`         | `@template/config-ts/base.json`         | Generic libraries, shared packages, anything neutral |
+| `react.json`        | `@template/config-ts/react.json`        | React web apps and component libraries (DOM + JSX)   |
+| `node.json`         | `@template/config-ts/node.json`         | Backend services / Node 20 packages (`NodeNext`)     |
+| `react-native.json` | `@template/config-ts/react-native.json` | React Native / Expo apps (no DOM, RN types)          |
 
 ## Installation
 
@@ -19,8 +19,8 @@ Add the workspace package as a dev dependency:
 // apps/<app>/package.json
 {
   "devDependencies": {
-    "@template/config-ts": "workspace:*"
-  }
+    "@template/config-ts": "workspace:*",
+  },
 }
 ```
 
@@ -37,8 +37,8 @@ Reference the preset from your app's `tsconfig.json` via the `extends` field. Ov
   "extends": "@template/config-ts/react.json",
   "include": ["src"],
   "compilerOptions": {
-    "outDir": "dist"
-  }
+    "outDir": "dist",
+  },
 }
 ```
 
@@ -50,8 +50,8 @@ Reference the preset from your app's `tsconfig.json` via the `extends` field. Ov
   "include": ["src"],
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
-  }
+    "rootDir": "src",
+  },
 }
 ```
 
@@ -60,7 +60,7 @@ Reference the preset from your app's `tsconfig.json` via the `extends` field. Ov
 ```jsonc
 {
   "extends": "@template/config-ts/react-native.json",
-  "include": ["app", "src", "App.tsx"]
+  "include": ["app", "src", "App.tsx"],
 }
 ```
 
@@ -72,8 +72,8 @@ Reference the preset from your app's `tsconfig.json` via the `extends` field. Ov
   "include": ["src"],
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "src"
-  }
+    "rootDir": "src",
+  },
 }
 ```
 

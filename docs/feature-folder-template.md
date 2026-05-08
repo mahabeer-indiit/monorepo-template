@@ -59,3 +59,11 @@ Features may **not** import from:
 - App-level top-level shared utility files (these shouldn't exist — promote to a shared package instead)
 
 If two features need the same logic, lift it into a package under `packages/`, not into a "shared" folder inside the app.
+
+## Path aliases
+
+The right alias style depends on which bundler is consuming the code. Don't fight the bundler.
+
+- **Web (Vite):** `@/*` aliases (mapped to `./src/*`) work in source code, in TypeScript, and at runtime via `vite.config.ts#resolve.alias`. They do **not** resolve in ESLint's import plugin — known trade-off (the shared resolver is simplified to avoid pnpm-symlink crashes); `import/order` still sorts correctly, but `import/no-cycle` won't follow aliased paths. Acceptable.
+- **Mobile (Metro):** **No `@/*` aliases.** Metro doesn't read `tsconfig.json#paths`; even if TypeScript typechecks the alias, runtime resolution fails. Use relative imports (`'../components/Foo'`). Barrel exports — every feature's `index.ts` — keep cross-feature imports short (`'../features/auth'` instead of `'../features/auth/screens/LoginScreen'`).
+- **Backend (Node):** No aliases. Use relative imports with explicit `.js` extensions (NodeNext module resolution requires this even for `.ts` source — the `.js` refers to the emitted file).

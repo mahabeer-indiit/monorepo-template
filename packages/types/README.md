@@ -26,8 +26,8 @@ Add the workspace package to any consumer that needs domain types:
 // apps/web/package.json (and apps/mobile, apps/api, ...)
 {
   "dependencies": {
-    "@template/types": "workspace:*"
-  }
+    "@template/types": "workspace:*",
+  },
 }
 ```
 

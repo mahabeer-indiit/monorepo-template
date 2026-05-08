@@ -4,15 +4,15 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 
 ## Stack
 
-| Layer       | Tooling                                                            |
-| ----------- | ------------------------------------------------------------------ |
-| Runtime     | **Node 20** (LTS), **pnpm 9**                                      |
-| Build       | **Turborepo** 2.x with cached `build` / `lint` / `typecheck` tasks |
-| Language    | **TypeScript** strict + `noUncheckedIndexedAccess`                 |
-| Web         | **React 18**, **Vite**, **Tailwind**, **shadcn/ui**                |
-| Backend     | **Express** + Mongoose, **Swagger** via JSDoc, **zod** validation  |
-| Mobile      | **Expo** (latest) + **React Native**, Metro tuned for monorepos    |
-| Shared types| `@template/types` — backend owns, FE + mobile import               |
+| Layer        | Tooling                                                            |
+| ------------ | ------------------------------------------------------------------ |
+| Runtime      | **Node 20** (LTS), **pnpm 9**                                      |
+| Build        | **Turborepo** 2.x with cached `build` / `lint` / `typecheck` tasks |
+| Language     | **TypeScript** strict + `noUncheckedIndexedAccess`                 |
+| Web          | **React 18**, **Vite**, **Tailwind**, **shadcn/ui**                |
+| Backend      | **Express** + Mongoose, **Swagger** via JSDoc, **zod** validation  |
+| Mobile       | **Expo** (latest) + **React Native**, Metro tuned for monorepos    |
+| Shared types | `@template/types` — backend owns, FE + mobile import               |
 
 ## Quick start
 
@@ -37,8 +37,8 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 
 5. **Create your first app.** `apps/` starts empty by design — pick the matching guide:
 
-   | App type | Guide                                        |
-   | -------- | -------------------------------------------- |
+   | App type | Guide                                                    |
+   | -------- | -------------------------------------------------------- |
    | Backend  | [`docs/generate-backend.md`](./docs/generate-backend.md) |
    | Web      | [`docs/generate-web.md`](./docs/generate-web.md)         |
    | Mobile   | [`docs/generate-mobile.md`](./docs/generate-mobile.md)   |
