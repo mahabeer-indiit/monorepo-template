@@ -13,9 +13,14 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 ## 2. Folder structure
 
-- `apps/` — runnable apps (`web`, `mobile`, `api`); each clones from a `_template-*` starter
+- `apps/` — runnable apps; **created on demand**, not pre-scaffolded
 - `packages/` — shared libraries (`config-ts`, `config-eslint`, `types`, `ui`)
-- Inside each app: **feature-based** layout under `src/features/<name>/{components,api,types,forms,hooks,pages,index.ts}`. No `src/components/` or `src/api/` at the app root. See [`docs/feature-folder-template.md`](./docs/feature-folder-template.md).
+- Inside each app: **feature-based** layout under `src/features/<name>/{components,api,types,forms,hooks,pages|screens,index.ts}`. No top-level `src/components/` or `src/api/` mixing concerns across features.
+
+> **Apps are NOT pre-generated.** When the team needs a new app, follow the matching guide:
+> - Backend → [`docs/generate-backend.md`](./docs/generate-backend.md)
+> - Web → [`docs/generate-web.md`](./docs/generate-web.md)
+> - Mobile → [`docs/generate-mobile.md`](./docs/generate-mobile.md)
 
 ## 3. Code style
 
@@ -27,15 +32,17 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 ## 4. API conventions
 
 - All routes versioned: **`/api/v1/...`** — never expose unversioned routes.
-- **Swagger annotations on every endpoint.** No exceptions, including internal/admin routes. PRs without Swagger blocks fail review.
+- **Swagger annotations on every endpoint** (JSDoc `@openapi` blocks). No exceptions, including internal/admin routes. PRs without them fail review.
 - Request/response shapes are typed via `@template/types`. Backend defines the type, FE imports it — never duplicate.
 - Errors return `{ error: { code, message, details? } }` with appropriate HTTP status. No raw 500 stack traces in responses.
+- Every request body / query / param goes through a **zod schema** before the controller logic runs.
 
 ## 5. UI conventions
 
 - Web components come from **`@template/ui` only**. Don't introduce Material UI, Chakra, Ant Design, etc.
-- **Tailwind utilities only** — no inline `style={{ ... }}`, no CSS-in-JS, no per-component CSS files.
-- New design-system components are added to `packages/ui` via `pnpm dlx shadcn@latest add <name>`, then exported from [`packages/ui/src/index.ts`](./packages/ui/src/index.ts).
+- **Tailwind utilities only** on web — no inline `style={{ ... }}`, no CSS-in-JS, no per-component CSS files.
+- Mobile uses **`StyleSheet.create()`** (NativeWind decision is post-foundation). Same prohibition on inline styles.
+- New design-system components are added to [`packages/ui`](./packages/ui) via `pnpm dlx shadcn@latest add <name>`, then exported from [`packages/ui/src/index.ts`](./packages/ui/src/index.ts).
 - Design tokens (colors, radii, spacing) live in [`packages/ui/tailwind.preset.ts`](./packages/ui/tailwind.preset.ts) and [`packages/ui/src/styles.css`](./packages/ui/src/styles.css). Apps consume via the preset.
 
 ## 6. Testing conventions
@@ -56,18 +63,30 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 ## 8. What Claude should NOT do
 
+- ❌ **Do not scaffold a new app freehand.** Always follow [`docs/generate-backend.md`](./docs/generate-backend.md), [`docs/generate-web.md`](./docs/generate-web.md), or [`docs/generate-mobile.md`](./docs/generate-mobile.md) — top-to-bottom, no shortcuts. Drift here propagates everywhere.
 - ❌ **Do not add new dependencies without asking.** Propose the dep, the use case, and the size impact; wait for approval.
-- ❌ **Do not refactor unrelated code** while making a focused change. If you spot something, leave a `TODO` comment or open an issue, but don't expand the diff.
+- ❌ **Do not refactor unrelated code** while making a focused change. Leave a `TODO` or open an issue, but don't expand the diff.
 - ❌ **Do not use `// @ts-ignore`.** Use `// @ts-expect-error <reason>` if a type error is unavoidable.
 - ❌ **Do not create new `.js` files in `src/`.** Always `.ts` / `.tsx`. ESLint will block this.
 - ❌ **Do not bypass the feature folder structure.** No top-level `src/components/`, `src/utils/`, `src/api/`. If two features need shared logic, lift it to `packages/`.
 - ❌ **Do not commit secrets**, `.env` files, or anything matching `.env.*` (the root `.gitignore` covers this; don't override it).
+- ❌ **Do not redefine domain types locally.** They come from [`@template/types`](./packages/types).
 
 ## 9. Reference paths
+
+**Shared packages**
 
 - Shared ESLint config → [`packages/config-eslint`](./packages/config-eslint) — flat config presets `base.mjs`, `react.mjs`, `node.mjs`, `react-native.mjs`
 - Shared TS configs → [`packages/config-ts`](./packages/config-ts) — `base.json`, `react.json`, `node.json`, `react-native.json`
 - Shared types → [`packages/types`](./packages/types) — backend owns; FE + mobile consume
 - Shared UI → [`packages/ui`](./packages/ui) — shadcn/ui components + Tailwind preset
-- Web app reference → [`apps/_template-web`](./apps/_template-web) — clone, rename, build
-- Workflow docs → [`docs/`](./docs/) — branching, commits, deployment, testing, feature folders
+
+**App generation guides** — follow these whenever a new app is needed
+
+- Backend → [`docs/generate-backend.md`](./docs/generate-backend.md) — Express + TS + Swagger + zod
+- Web → [`docs/generate-web.md`](./docs/generate-web.md) — React + Vite + TS + Tailwind + shadcn (via `@template/ui`)
+- Mobile → [`docs/generate-mobile.md`](./docs/generate-mobile.md) — Expo + RN + TS + Metro monorepo wiring
+
+**Workflow docs** — process, not code
+
+- [`docs/branching-and-prs.md`](./docs/branching-and-prs.md), [`docs/commit-conventions.md`](./docs/commit-conventions.md), [`docs/feature-folder-template.md`](./docs/feature-folder-template.md), [`docs/deployment.md`](./docs/deployment.md), [`docs/testing.md`](./docs/testing.md), [`docs/event-naming.md`](./docs/event-naming.md)
