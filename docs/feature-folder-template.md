@@ -8,7 +8,7 @@ Every feature in a frontend app (`apps/web`, `apps/mobile`) lives in `src/featur
 src/features/<name>/
 ├── components/   UI building blocks scoped to this feature
 ├── api/          API call functions (one per endpoint), return typed data
-├── types/        Feature-local types; re-exports from @template/types when shared
+├── types/        Feature-local types; re-exports from a shared packages/types when one exists
 ├── forms/        React Hook Form schemas, defaults, submit handlers
 ├── hooks/        Custom hooks: useXxx, data-fetching wrappers, derived state
 ├── pages/        Route-level components (web) — composes everything else
@@ -37,10 +37,10 @@ This makes refactors inside a feature safe: as long as the barrel still exports 
 
 [`apps/_template-web/src/features/hello/`](../apps/_template-web/src/features/hello/) is the canonical reference. It demonstrates:
 
-- `types/hello-user.ts` — feature-local view of a shared type from `@template/types`
+- `types/hello-user.ts` — feature-local view of a domain type (imported from a shared `packages/types` once it exists)
 - `api/get-hello-user.ts` — typed fetch returning `Promise<User>`
 - `hooks/use-hello-user.ts` — wraps the API call in a hook
-- `components/HelloButton.tsx` — small, presentational, uses `@template/ui`
+- `components/HelloButton.tsx` — small, presentational, styled with Tailwind utilities
 - `pages/HelloPage.tsx` — composes hook + components into a route-level view
 - `index.ts` — exports `HelloPage`, `HelloButton`, `useHelloUser`, `getHelloUser`, type `HelloUser`
 
@@ -50,7 +50,7 @@ When starting a new feature, **copy this folder, rename, and gut the contents**.
 
 Features may import from:
 
-- `@template/ui`, `@template/types`, other shared packages
+- Shared packages under `packages/` (e.g. a `packages/types` you create on demand)
 - Other features **only via their `index.ts`**
 
 Features may **not** import from:

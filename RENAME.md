@@ -4,7 +4,7 @@ You just clicked **Use this template** on GitHub (or cloned the repo directly). 
 
 ## Step 1 — Replace `@template/` with your org scope
 
-Across the entire repo, replace `@template/` with `@<your-org>/`. This renames every workspace package (`@template/ui` → `@<your-org>/ui`, `@template/types` → `@<your-org>/types`, etc.) and every import that references them.
+Across the entire repo, replace `@template/` with `@<your-org>/`. This renames every workspace package (`@template/config-ts` → `@<your-org>/config-ts`, `@template/config-eslint` → `@<your-org>/config-eslint`, etc.) and every import that references them.
 
 **Automated (recommended):**
 
@@ -61,14 +61,14 @@ git commit -m "chore: rename template to <your-org>"
 **Apps are NOT pre-generated.** The `apps/` folder is empty by design — you create apps on demand from the matching guide:
 
 - Backend (Express + TS + Swagger) → [`docs/generate-backend.md`](./docs/generate-backend.md)
-- Web (React + Vite + Tailwind + shadcn) → [`docs/generate-web.md`](./docs/generate-web.md)
+- Web (React + Vite + Tailwind) → [`docs/generate-web.md`](./docs/generate-web.md)
 - Mobile (Expo + React Native) → [`docs/generate-mobile.md`](./docs/generate-mobile.md)
 
 Verify the rename worked:
 
 ```bash
 pnpm install            # should be clean
-pnpm turbo build        # 4 packages should still build
+pnpm turbo build        # 2 packages should still build
 ```
 
 If those pass, you're done. Pick a generation guide and scaffold your first app.
