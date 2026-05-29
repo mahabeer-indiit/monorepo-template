@@ -1,6 +1,6 @@
 # monorepo-template
 
-Opinionated starter for fullstack **MERN + React Native** projects, wired with shared TypeScript / ESLint / Tailwind / shadcn-UI / domain-types packages and per-stack scaffolding guides.
+Opinionated starter for fullstack **MERN + React Native** projects, wired with shared TypeScript / ESLint / domain-types packages and per-stack scaffolding guides.
 
 ## Stack
 
@@ -9,7 +9,7 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 | Runtime      | **Node 20** (LTS), **pnpm 9**                                      |
 | Build        | **Turborepo** 2.x with cached `build` / `lint` / `typecheck` tasks |
 | Language     | **TypeScript** strict + `noUncheckedIndexedAccess`                 |
-| Web          | **React 18**, **Vite**, **Tailwind**, **shadcn/ui**                |
+| Web          | **React 18**, **Vite**, **Tailwind**                               |
 | Backend      | **Express** + Mongoose, **Swagger** via JSDoc, **zod** validation  |
 | Mobile       | **Expo** (latest) + **React Native**, Metro tuned for monorepos    |
 | Shared types | `@template/types` — backend owns, FE + mobile import               |
@@ -53,8 +53,7 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 ├── packages/     shared libraries — built and used by every app
 │   ├── config-ts        TypeScript presets (base, react, node, react-native)
 │   ├── config-eslint    ESLint 9 flat-config presets matching the TS presets
-│   ├── types            Domain types — backend owns, FE + mobile consume
-│   └── ui               shadcn/ui components + Tailwind preset (web only)
+│   └── types            Domain types — backend owns, FE + mobile consume
 ├── docs/         workflow docs + per-stack generation guides
 └── scripts/      one-off automation (rename, etc.)
 ```

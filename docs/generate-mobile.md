@@ -86,7 +86,7 @@ module.exports = config;
 - **`nodeModulesPaths: [...]`** — Metro's default module resolver does its own walk-up of the filesystem, but with pnpm's isolated installs and disabled hierarchical lookup, we have to be explicit: look in **this app's** `node_modules` first (where pnpm symlinks workspace packages), then in the **workspace root's** `node_modules` (where hoisted deps live).
 - **`disableHierarchicalLookup: true`** — without this, Metro can pick up packages from arbitrary parent directories, leading to **duplicate React** errors that crash the app on startup. We've already declared the canonical paths above; turn off the fallback walk.
 - **`unstable_enableSymlinks: true`** — pnpm installs every dep as a symlink. Older Metro versions wouldn't follow symlinks; newer Metro can but only when this flag is set.
-- **`unstable_enablePackageExports: true`** — required for some workspace packages (like `@template/ui`) that use the `exports` field in `package.json` for deep imports.
+- **`unstable_enablePackageExports: true`** — required for workspace packages that use the `exports` field in `package.json` for deep imports.
 
 ### When this config is wrong
 
@@ -95,7 +95,7 @@ module.exports = config;
 | `Unable to resolve module @template/types`                        | Missed `nodeModulesPaths` — Metro can't see hoisted deps  |
 | `Invariant Violation: Module AppRegistry is not a registered ...` | Duplicate React — drop `disableHierarchicalLookup` flag   |
 | HMR doesn't fire when editing a workspace package                 | `watchFolders` not set, or didn't include `workspaceRoot` |
-| `Unable to resolve "@template/ui/lib/utils"`                      | Missed `unstable_enablePackageExports`                    |
+| `Unable to resolve a workspace package's deep import (`pkg/sub`)` | Missed `unstable_enablePackageExports`                    |
 | Package resolves at type-time but crashes at runtime              | Missed `unstable_enableSymlinks`                          |
 
 If symptoms persist after the config above, see the **Troubleshooting** section at the end of this guide.

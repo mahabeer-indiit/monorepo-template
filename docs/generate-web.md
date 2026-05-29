@@ -74,7 +74,6 @@ What stayed: `src/main.tsx`, `src/vite-env.d.ts`, `index.html`, `vite.config.ts`
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
     "@template/types": "workspace:*",
-    "@template/ui": "workspace:*",
     "axios": "^1.7.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -97,7 +96,7 @@ What stayed: `src/main.tsx`, `src/vite-env.d.ts`, `index.html`, `vite.config.ts`
 }
 ```
 
-> **Do not install `shadcn`, `@radix-ui/*`, `lucide-react`, `class-variance-authority`, etc. directly in this app.** Those belong in `@template/ui`. Adding a UI dep here is a code-review reject.
+> **This template is unopinionated about UI component libraries.** There is no shared web UI package. If this app needs a component library (shadcn/ui, Radix, etc.), add it here and own it locally — but get sign-off first per the "no new deps without asking" rule in [`CLAUDE.md`](../CLAUDE.md). Keep styling to Tailwind utilities (see §5 conventions).
 
 ## 5. Run `pnpm install`
 
@@ -187,17 +186,17 @@ interface ImportMeta {
 ### `tailwind.config.ts`
 
 ```ts
-import uiPreset from '@template/ui/tailwind.preset';
-
 import type { Config } from 'tailwindcss';
 
 export default {
-  presets: [uiPreset],
-  content: ['./index.html', './src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {},
+  },
 } satisfies Config;
 ```
 
-> **Critical:** the `'../../packages/ui/src/**/*.{ts,tsx}'` glob is **not optional**. Without it, Tailwind doesn't see the classes used inside `@template/ui` components and tree-shakes them out of production CSS. Buttons render unstyled in prod.
+> **Add your design tokens under `theme.extend`** (colors, radii, spacing) as the app grows. This template ships no shared preset — each app owns its own Tailwind theme.
 
 ### `postcss.config.js`
 
@@ -213,20 +212,18 @@ export default {
 ### `src/index.css`
 
 ```css
-@import '@template/ui/styles.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 ```
 
-That's the entire file. **Do not add app-level CSS variables here, do not redeclare `@tailwind base`, do not write per-component CSS.**
+That's the entire file. **Do not write per-component CSS.** If you need design-token CSS variables, declare them here under a `@layer base` block — but keep component styling to Tailwind utilities (see §5).
 
-## 11. shadcn consumption
+## 11. UI components
 
-> **Hard rule.** This app **does not run `pnpm dlx shadcn@latest add`**. Components come from `@template/ui` only.
+> **Unopinionated by design.** This template ships **no shared UI package**. Build your own presentational components under `src/features/<name>/components/` with Tailwind utilities, or adopt a component library (shadcn/ui, Radix, etc.) scoped to this app.
 >
-> If a shadcn component you need isn't in `@template/ui` yet, add it **there**, export it from [`packages/ui/src/index.ts`](../packages/ui/src/index.ts), then import it here. See [`packages/ui/README.md`](../packages/ui/README.md).
-
-```tsx
-import { Button, Input, Card, Dialog } from '@template/ui';
-```
+> If you do add a library, get sign-off first (see "no new deps without asking" in [`CLAUDE.md`](../CLAUDE.md)), install it in **this app's** `package.json`, and keep styling to Tailwind utilities — no inline `style={{ ... }}`, no CSS-in-JS.
 
 ## 12. Folder structure
 
@@ -247,7 +244,7 @@ apps/<app-name>/
     ├── App.tsx               ← routes
     ├── ErrorFallback.tsx     ← top-level error UI
     ├── vite-env.d.ts
-    ├── index.css             ← only `@import '@template/ui/styles.css';`
+    ├── index.css             ← only the three `@tailwind` directives
     ├── lib/
     │   └── api-client.ts     ← axios wrapper for the backend
     └── features/
@@ -324,8 +321,6 @@ Wraps the entire app. A single render error in any feature falls through to this
 ```tsx
 import type { FallbackProps } from 'react-error-boundary';
 
-import { Button } from '@template/ui';
-
 export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
     <div
@@ -333,10 +328,16 @@ export function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
       className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-8 text-center"
     >
       <h1 className="text-2xl font-semibold">Something went wrong</h1>
-      <pre className="bg-muted text-destructive max-w-full overflow-auto rounded p-4 text-left text-sm">
+      <pre className="max-w-full overflow-auto rounded bg-gray-100 p-4 text-left text-sm text-red-600">
         {error.message}
       </pre>
-      <Button onClick={resetErrorBoundary}>Try again</Button>
+      <button
+        type="button"
+        onClick={resetErrorBoundary}
+        className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+      >
+        Try again
+      </button>
     </div>
   );
 }
@@ -493,11 +494,11 @@ type PingStatusProps = {
 };
 
 export function PingStatus({ data, isLoading, isError }: PingStatusProps) {
-  if (isLoading) return <p className="text-muted-foreground text-sm">Pinging API…</p>;
-  if (isError) return <p className="text-destructive text-sm">API unreachable</p>;
+  if (isLoading) return <p className="text-sm text-gray-500">Pinging API…</p>;
+  if (isError) return <p className="text-sm text-red-600">API unreachable</p>;
   if (!data) return null;
   return (
-    <p className="text-muted-foreground text-sm">
+    <p className="text-sm text-gray-500">
       API up — last ping <code>{data.ts}</code>
     </p>
   );
@@ -507,8 +508,6 @@ export function PingStatus({ data, isLoading, isError }: PingStatusProps) {
 ### `src/features/hello/components/GreetCard.tsx`
 
 ```tsx
-import { Button } from '@template/ui';
-
 import type { HelloResponse } from '../types/hello-response';
 
 type GreetCardProps = {
@@ -519,14 +518,19 @@ type GreetCardProps = {
 
 export function GreetCard({ result, isPending, onGreet }: GreetCardProps) {
   return (
-    <div className="bg-card flex flex-col items-center gap-4 rounded-lg border p-6">
-      <Button onClick={onGreet} disabled={isPending}>
+    <div className="flex flex-col items-center gap-4 rounded-lg border bg-white p-6">
+      <button
+        type="button"
+        onClick={onGreet}
+        disabled={isPending}
+        className="rounded bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 disabled:opacity-50"
+      >
         {isPending ? 'Greeting…' : 'Greet "World"'}
-      </Button>
+      </button>
       {result && (
         <div className="text-center">
           <p className="text-lg">{result.greeting}</p>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-gray-500">
             User: {result.user.email} (id: <code>{result.user.id}</code>)
           </p>
         </div>
@@ -536,7 +540,7 @@ export function GreetCard({ result, isPending, onGreet }: GreetCardProps) {
 }
 ```
 
-> **UI rule.** Components from **`@template/ui` only** — no Material UI, Chakra, Ant Design, Mantine. Tailwind utilities only — **no `style={{ ... }}` inline styles, no CSS modules, no styled-components.**
+> **UI rule.** Tailwind utilities only — **no `style={{ ... }}` inline styles, no CSS modules, no styled-components.** Build presentational components locally; this template ships no shared UI package.
 
 ### `src/features/hello/pages/HelloPage.tsx`
 
@@ -554,7 +558,7 @@ export function HelloPage() {
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-8 p-8">
       <header className="text-center">
         <h1 className="text-4xl font-semibold">Hello</h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="mt-2 text-gray-500">
           Calls <code>/api/v1/hello</code> via React Query.
         </p>
       </header>
@@ -700,7 +704,7 @@ Open <http://localhost:5173> and verify:
 - ✅ "API up — last ping ..." text appears
 - ✅ Clicking the **Greet "World"** button shows the greeting + user email + id
 - ✅ Network tab shows `GET /api/v1/hello` and `POST /api/v1/hello` to `VITE_API_URL`
-- ✅ The button is the shadcn `<Button>` from `@template/ui` (rounded, themed)
+- ✅ The button is styled with Tailwind utilities (rounded, hover state)
 - ✅ Forcing an error in any component falls through to the **Try again** screen, not a blank page
 
 Then:
@@ -730,17 +734,13 @@ The workspace pins `@types/react` and `@types/react-dom` to `^19.0.0` via `pnpm.
 }
 ```
 
-This prevents type drift between workspace packages (e.g., `@template/ui` was authored against React 19; if your app pulled in `@types/react@18` transitively, the two `ReactNode` definitions disagree and JSX components from `@template/ui` look "not assignable").
+This prevents type drift between workspace packages (e.g., if your app pulled in `@types/react@18` transitively while another package resolved `@types/react@19`, the two `ReactNode` definitions disagree and shared JSX components look "not assignable").
 
 **Don't try to upgrade `@types/react` in this app's `package.json`** — change the override at the root if a bump is genuinely needed, then run `pnpm install` from the repo root.
 
 ### `pnpm lint` errors with "Tsconfig not found ... node_modules/tsconfig.base.json"
 
 You shouldn't see this. `@template/config-eslint` is configured to skip the typescript resolver (it walks tsconfig `extends` chains and breaks on pnpm symlinks). If you see this error, you've added a per-app override to `eslint.config.mjs` that re-enables the typescript resolver — **remove it**. The shared config handles the resolver correctly without per-app config.
-
-### Tailwind classes used inside `@template/ui` look unstyled in production
-
-You forgot the `'../../packages/ui/src/**/*.{ts,tsx}'` glob in `tailwind.config.ts#content`. Tailwind doesn't scan the workspace package by default — without that glob, classes used inside shared components get tree-shaken from the prod CSS.
 
 ### `import.meta.env.VITE_FOO` is `unknown` in TypeScript
 
@@ -758,14 +758,12 @@ Pin this somewhere visible:
 
 - ✅ Feature-based folder structure — **no `components/`, `api/`, `hooks/` at app root**
 - ✅ Coupling rule — keep code inside the feature until **2+ features** need it
-- ✅ UI components **only from `@template/ui`** — no MUI, Chakra, Ant, Mantine
-- ✅ **No local shadcn install** — add new components to `packages/ui` and export them
 - ✅ Tailwind utilities only — **no inline `style={{...}}`, no CSS modules, no styled-components**
+- ✅ No shared UI package — build components locally; adopt a UI library per app only with sign-off
 - ✅ Domain types from `@template/types` — **never redefine** `User`, `Order`, etc.
 - ✅ All API calls through `src/lib/api-client.ts` + React Query hook in `features/<x>/api/` — **no `fetch()` in components**
 - ✅ Every `VITE_*` env var declared in `src/vite-env.d.ts`
 - ✅ Top-level `<ErrorBoundary>` wraps the app — render errors fall through, not blank screens
 - ✅ Auth tokens managed by **`apiClient` interceptors** — never re-implement per feature
 - ✅ No new `.js` files in `src/` — ESLint blocks it
-- ✅ Don't forget the `'../../packages/ui/src/**/*.{ts,tsx}'` glob in `tailwind.config.ts`
 - ✅ Don't override `@types/react` in this app — change root `pnpm.overrides` instead

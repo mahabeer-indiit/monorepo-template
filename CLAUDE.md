@@ -7,14 +7,14 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 - **Node 20** (LTS) — see [`.nvmrc`](./.nvmrc); `engine-strict=true`
 - **pnpm 9** — managed via the `packageManager` field in [`package.json`](./package.json); never use `npm` or `yarn`
 - **TypeScript strict** everywhere — strict mode + `noUncheckedIndexedAccess` + `noImplicitOverride`
-- **Frontend (web):** React 18, Vite, Tailwind, **shadcn/ui**
+- **Frontend (web):** React 18, Vite, Tailwind
 - **Backend (api):** Express + Mongoose
 - **Mobile:** React Native via **Expo SDK (latest)**
 
 ## 2. Folder structure
 
 - `apps/` — runnable apps; **created on demand**, not pre-scaffolded
-- `packages/` — shared libraries (`config-ts`, `config-eslint`, `types`, `ui`)
+- `packages/` — shared libraries (`config-ts`, `config-eslint`, `types`)
 - Inside each app: **feature-based** layout under `src/features/<name>/{components,api,types,forms,hooks,pages|screens,index.ts}`. No top-level `src/components/` or `src/api/` mixing concerns across features.
 
 > **Apps are NOT pre-generated.** When the team needs a new app, follow the matching guide:
@@ -40,11 +40,9 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 ## 5. UI conventions
 
-- Web components come from **`@template/ui` only**. Don't introduce Material UI, Chakra, Ant Design, etc.
 - **Tailwind utilities only** on web — no inline `style={{ ... }}`, no CSS-in-JS, no per-component CSS files.
 - Mobile uses **`StyleSheet.create()`** (NativeWind decision is post-foundation). Same prohibition on inline styles.
-- New design-system components are added to [`packages/ui`](./packages/ui) via `pnpm dlx shadcn@latest add <name>`, then exported from [`packages/ui/src/index.ts`](./packages/ui/src/index.ts).
-- Design tokens (colors, radii, spacing) live in [`packages/ui/tailwind.preset.ts`](./packages/ui/tailwind.preset.ts) and [`packages/ui/src/styles.css`](./packages/ui/src/styles.css). Apps consume via the preset.
+- There is **no shared web UI package** — each web app owns its own components under `src/features/<name>/components/`. If a UI component library is needed, choose it per app; this template stays unopinionated about which one.
 
 ## 6. Testing conventions
 
@@ -80,12 +78,11 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 - Shared ESLint config → [`packages/config-eslint`](./packages/config-eslint) — flat config presets `base.mjs`, `react.mjs`, `node.mjs`, `react-native.mjs`
 - Shared TS configs → [`packages/config-ts`](./packages/config-ts) — `base.json`, `react.json`, `node.json`, `react-native.json`
 - Shared types → [`packages/types`](./packages/types) — backend owns; FE + mobile consume
-- Shared UI → [`packages/ui`](./packages/ui) — shadcn/ui components + Tailwind preset
 
 **App generation guides** — follow these whenever a new app is needed
 
 - Backend → [`docs/generate-backend.md`](./docs/generate-backend.md) — Express + TS + Swagger + zod
-- Web → [`docs/generate-web.md`](./docs/generate-web.md) — React + Vite + TS + Tailwind + shadcn (via `@template/ui`)
+- Web → [`docs/generate-web.md`](./docs/generate-web.md) — React + Vite + TS + Tailwind
 - Mobile → [`docs/generate-mobile.md`](./docs/generate-mobile.md) — Expo + RN + TS + Metro monorepo wiring
 
 **Workflow docs** — process, not code

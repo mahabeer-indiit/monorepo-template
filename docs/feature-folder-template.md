@@ -40,7 +40,7 @@ This makes refactors inside a feature safe: as long as the barrel still exports 
 - `types/hello-user.ts` — feature-local view of a shared type from `@template/types`
 - `api/get-hello-user.ts` — typed fetch returning `Promise<User>`
 - `hooks/use-hello-user.ts` — wraps the API call in a hook
-- `components/HelloButton.tsx` — small, presentational, uses `@template/ui`
+- `components/HelloButton.tsx` — small, presentational, styled with Tailwind utilities
 - `pages/HelloPage.tsx` — composes hook + components into a route-level view
 - `index.ts` — exports `HelloPage`, `HelloButton`, `useHelloUser`, `getHelloUser`, type `HelloUser`
 
@@ -50,7 +50,7 @@ When starting a new feature, **copy this folder, rename, and gut the contents**.
 
 Features may import from:
 
-- `@template/ui`, `@template/types`, other shared packages
+- `@template/types`, other shared packages
 - Other features **only via their `index.ts`**
 
 Features may **not** import from:
