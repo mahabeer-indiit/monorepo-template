@@ -47,7 +47,7 @@ This produces a minimal Expo + TS app with `App.tsx`, `app.json`, `tsconfig.json
 
 ## 4. CRITICAL: Metro monorepo configuration
 
-> **This is the step everyone gets wrong.** Metro (the React Native bundler) doesn't understand monorepos out of the box. By default it only watches the app's directory and only resolves `node_modules` from there — so workspace packages like `@template/types` are invisible to it. Without this config, you'll get cryptic "module not found" errors at runtime.
+> **This is the step everyone gets wrong.** Metro (the React Native bundler) doesn't understand monorepos out of the box. By default it only watches the app's directory and only resolves `node_modules` from there — so any workspace package you import (e.g. a `packages/types` you add later) is invisible to it. Without this config, you'll get cryptic "module not found" errors at runtime.
 
 Create `apps/<app-name>/metro.config.js` (the file does **not** exist yet — Expo's blank template has no Metro config):
 
@@ -82,7 +82,7 @@ module.exports = config;
 
 ### What each line does
 
-- **`watchFolders: [workspaceRoot]`** — by default Metro only watches `apps/<app-name>/`. With workspaces, edits to `packages/types/src/index.ts` need to trigger HMR in the mobile app. This line broadcasts the watch up to the repo root.
+- **`watchFolders: [workspaceRoot]`** — by default Metro only watches `apps/<app-name>/`. With workspaces, edits to a shared package's source (e.g. `packages/types/src/index.ts`, once you add it) need to trigger HMR in the mobile app. This line broadcasts the watch up to the repo root.
 - **`nodeModulesPaths: [...]`** — Metro's default module resolver does its own walk-up of the filesystem, but with pnpm's isolated installs and disabled hierarchical lookup, we have to be explicit: look in **this app's** `node_modules` first (where pnpm symlinks workspace packages), then in the **workspace root's** `node_modules` (where hoisted deps live).
 - **`disableHierarchicalLookup: true`** — without this, Metro can pick up packages from arbitrary parent directories, leading to **duplicate React** errors that crash the app on startup. We've already declared the canonical paths above; turn off the fallback walk.
 - **`unstable_enableSymlinks: true`** — pnpm installs every dep as a symlink. Older Metro versions wouldn't follow symlinks; newer Metro can but only when this flag is set.
@@ -92,7 +92,7 @@ module.exports = config;
 
 | Symptom                                                           | Likely cause                                              |
 | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| `Unable to resolve module @template/types`                        | Missed `nodeModulesPaths` — Metro can't see hoisted deps  |
+| `Unable to resolve module <a workspace package>`                  | Missed `nodeModulesPaths` — Metro can't see hoisted deps  |
 | `Invariant Violation: Module AppRegistry is not a registered ...` | Duplicate React — drop `disableHierarchicalLookup` flag   |
 | HMR doesn't fire when editing a workspace package                 | `watchFolders` not set, or didn't include `workspaceRoot` |
 | `Unable to resolve a workspace package's deep import (`pkg/sub`)` | Missed `unstable_enablePackageExports`                    |
@@ -126,7 +126,6 @@ Overwrite the bootstrap-generated `package.json` with:
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
     "@tanstack/react-query": "^5.59.0",
-    "@template/types": "workspace:*",
     "expo": "~52.0.0",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
@@ -414,12 +413,18 @@ Keep `App.tsx` thin. It only sets up the boundary + providers + status bar and r
 
 ## 14. Reference feature: `hello`
 
-The canonical feature. Copy this folder when creating a new feature, then rename and gut the contents. Demonstrates: typed routes, React Query hook calling the backend, safe-area handling, typed navigation, `User` type from `@template/types`.
+The canonical feature. Copy this folder when creating a new feature, then rename and gut the contents. Demonstrates: typed routes, React Query hook calling the backend, safe-area handling, typed navigation, a local `User` type (import it from a shared `packages/types` once the backend exposes one).
 
 ### `src/features/hello/types/hello-state.ts`
 
 ```ts
-import type { User } from '@template/types';
+// Define the type locally for now. Once the backend shares it via a
+// `packages/types` package, replace this with: import type { User } from '@<org>/types';
+export type User = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
 
 export type HelloPing = {
   ok: boolean;
@@ -436,7 +441,7 @@ export type GreetResponse = {
 };
 ```
 
-> **Shared types rule.** Domain types come from `@template/types`. **Never redefine `User`, `Order`, etc. locally.**
+> **Shared types rule.** Domain types are **owned by the backend**. This template ships no shared types package — define the type locally for now, and the moment the backend exposes it for clients, lift it into a `packages/types` package (created on demand) and import from there. **Don't keep two hand-maintained copies of the same domain type.**
 
 ### `src/features/hello/api/use-hello-ping.ts`
 
@@ -481,7 +486,7 @@ export function useGreet() {
 ```tsx
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { User } from '@template/types';
+import type { User } from '../types/hello-state';
 
 type UserCardProps = {
   user: User;
@@ -563,7 +568,7 @@ export function HelloScreen() {
     <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 24 }]}>
       <Text style={styles.title}>Hello, Mobile!</Text>
       <Text style={styles.subtitle}>
-        End-to-end wiring: typed nav + React Query (query + mutation) + @template/types
+        End-to-end wiring: typed nav + React Query (query + mutation) + typed responses
       </Text>
 
       {/* Query — runs on mount */}
@@ -1033,7 +1038,7 @@ Pin this somewhere visible:
 
 - ✅ Feature-based folder structure — **`screens/`, not `pages/`**
 - ✅ Coupling rule — keep code inside the feature until **2+ features** need it
-- ✅ Domain types from `@template/types` — **never redefine** `User`, `Order`, etc.
+- ✅ Domain types owned by the backend — define locally, lift to a `packages/types` package (created on demand) once shared; **never keep two copies**
 - ✅ Styles via **`StyleSheet.create()`** — no inline `style={{...}}`, no styling libs
 - ✅ All API calls through `src/lib/api-client.ts` + React Query hook in `features/<x>/api/` — `useQuery` for reads, `useMutation` for writes; **no raw `fetch()` in screens**
 - ✅ Top-level `<ErrorBoundary>` (from `react-native-error-boundary`) wraps the app — render errors fall through, not the red dev overlay

@@ -14,7 +14,7 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 ## 2. Folder structure
 
 - `apps/` — runnable apps; **created on demand**, not pre-scaffolded
-- `packages/` — shared libraries (`config-ts`, `config-eslint`, `types`)
+- `packages/` — shared libraries (`config-ts`, `config-eslint`); add more on demand (e.g. a `types` package when a domain type is first shared across apps)
 - Inside each app: **feature-based** layout under `src/features/<name>/{components,api,types,forms,hooks,pages|screens,index.ts}`. No top-level `src/components/` or `src/api/` mixing concerns across features.
 
 > **Apps are NOT pre-generated.** When the team needs a new app, follow the matching guide:
@@ -34,7 +34,7 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 - All routes versioned: **`/api/v1/...`** — never expose unversioned routes.
 - **Swagger annotations on every endpoint** (JSDoc `@openapi` blocks). No exceptions, including internal/admin routes. PRs without them fail review.
-- Request/response shapes are typed via `@template/types`. Backend defines the type, FE imports it — never duplicate.
+- Request/response shapes are shared as TypeScript types. The backend owns each domain type; when one needs to be shared with the web/mobile apps, lift it into a `packages/types` workspace package (**created on demand** — not pre-shipped) and import from there. Never duplicate it.
 - Errors return `{ error: { code, message, details? } }` with appropriate HTTP status. No raw 500 stack traces in responses.
 - Every request body / query / param goes through a **zod schema** before the controller logic runs.
 
@@ -69,7 +69,7 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 - ❌ **Do not create new `.js` files in `src/`.** Always `.ts` / `.tsx`. ESLint will block this.
 - ❌ **Do not bypass the feature folder structure.** No top-level `src/components/`, `src/utils/`, `src/api/`. If two features need shared logic, lift it to `packages/`.
 - ❌ **Do not commit secrets**, `.env` files, or anything matching `.env.*` (the root `.gitignore` covers this; don't override it).
-- ❌ **Do not redefine domain types locally.** They come from [`@template/types`](./packages/types).
+- ❌ **Do not duplicate a domain type the backend already exposes.** When a type is shared across apps, lift it into a `packages/types` package (created on demand) and import it — don't redefine it in each app.
 
 ## 9. Reference paths
 
@@ -77,7 +77,7 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 
 - Shared ESLint config → [`packages/config-eslint`](./packages/config-eslint) — flat config presets `base.mjs`, `react.mjs`, `node.mjs`, `react-native.mjs`
 - Shared TS configs → [`packages/config-ts`](./packages/config-ts) — `base.json`, `react.json`, `node.json`, `react-native.json`
-- Shared types → [`packages/types`](./packages/types) — backend owns; FE + mobile consume
+- Shared types → a `packages/types` package, **created on demand** — backend owns; FE + mobile consume. Not pre-shipped; add it when a type is first shared across apps.
 
 **App generation guides** — follow these whenever a new app is needed
 

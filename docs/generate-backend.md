@@ -97,7 +97,6 @@ Create `apps/<app-name>/package.json`:
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@template/types": "workspace:*",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "express-async-errors": "^3.1.1",
@@ -137,7 +136,7 @@ Create `apps/<app-name>/package.json`:
 pnpm install
 ```
 
-This links the workspace deps (`@template/types`, `@template/config-ts`, `@template/config-eslint`) and downloads everything else.
+This links the workspace deps (`@template/config-ts`, `@template/config-eslint`) and downloads everything else.
 
 > **🔁 Anytime you change `package.json`** — adding a dep, bumping a version, renaming a script — run `pnpm install` from the repo root again. The workspace state needs to reflect the manifest before any other command will work.
 
@@ -440,7 +439,11 @@ This is the canonical feature. Copy this folder when creating a new feature, the
 ### `src/features/hello/types.ts`
 
 ```ts
-import type { User } from '@template/types';
+export type User = {
+  id: string;
+  email: string;
+  createdAt: Date;
+};
 
 export type HelloResponse = {
   greeting: string;
@@ -448,7 +451,7 @@ export type HelloResponse = {
 };
 ```
 
-> **Shared types rule.** Domain types come from `@template/types`. **Never redefine `User`, `Order`, etc. locally** — even "just for now." If you need a feature-specific projection, use `Pick<User, ...>` or a wrapper type.
+> **Shared types rule.** This service **owns** its domain types. Define them in the feature (or a local `src/types/` module). **The moment a type must be shared with the web/mobile apps, lift it into a `packages/types` workspace package — created on demand — that the backend owns and the clients import.** Don't let two apps maintain their own copies; one owner, everyone else imports.
 
 ### `src/features/hello/schema.ts` — zod validation
 
@@ -480,9 +483,7 @@ export type HelloRequest = z.infer<typeof helloRequestSchema>;
 ### `src/features/hello/service.ts` — business logic
 
 ```ts
-import type { User } from '@template/types';
-
-import type { HelloResponse } from './types.js';
+import type { HelloResponse, User } from './types.js';
 
 export const helloService = {
   greet(name: string): HelloResponse {
@@ -780,7 +781,7 @@ Pin this somewhere visible:
 - ✅ `import 'express-async-errors';` at the top of `src/app.ts` — async handler rejections reach the error middleware automatically
 - ✅ `CORS_ORIGINS` is an allowlist — **never ship `*` to production**
 - ✅ Use **`logger.info` / `logger.warn` / `logger.error`** — no `console.log` in committed code
-- ✅ Domain types come from `@template/types` — **never redefine** `User`, `Order`, etc.
+- ✅ Backend **owns** domain types — define locally, then lift to a `packages/types` package (created on demand) once shared with clients
 - ✅ All routes mounted under `/api/v1` — **no unversioned routes**
 - ✅ Errors return `{ error: { code, message, details? } }` with the right HTTP status
 - ✅ Production runs `dist/index.js` via PM2 — **never `tsx` or `ts-node`**

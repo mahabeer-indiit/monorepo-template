@@ -4,7 +4,7 @@ You just clicked **Use this template** on GitHub (or cloned the repo directly). 
 
 ## Step 1 — Replace `@template/` with your org scope
 
-Across the entire repo, replace `@template/` with `@<your-org>/`. This renames every workspace package (`@template/types` → `@<your-org>/types`, `@template/config-ts` → `@<your-org>/config-ts`, etc.) and every import that references them.
+Across the entire repo, replace `@template/` with `@<your-org>/`. This renames every workspace package (`@template/config-ts` → `@<your-org>/config-ts`, `@template/config-eslint` → `@<your-org>/config-eslint`, etc.) and every import that references them.
 
 **Automated (recommended):**
 
@@ -68,7 +68,7 @@ Verify the rename worked:
 
 ```bash
 pnpm install            # should be clean
-pnpm turbo build        # 3 packages should still build
+pnpm turbo build        # 2 packages should still build
 ```
 
 If those pass, you're done. Pick a generation guide and scaffold your first app.

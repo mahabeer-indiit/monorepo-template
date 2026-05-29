@@ -12,7 +12,7 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 | Web          | **React 18**, **Vite**, **Tailwind**                               |
 | Backend      | **Express** + Mongoose, **Swagger** via JSDoc, **zod** validation  |
 | Mobile       | **Expo** (latest) + **React Native**, Metro tuned for monorepos    |
-| Shared types | `@template/types` — backend owns, FE + mobile import               |
+| Shared types | `packages/types` (add on demand) — backend owns, FE + mobile import |
 
 ## Quick start
 
@@ -52,8 +52,8 @@ Opinionated starter for fullstack **MERN + React Native** projects, wired with s
 ├── apps/         (empty — you create apps from docs/generate-*.md)
 ├── packages/     shared libraries — built and used by every app
 │   ├── config-ts        TypeScript presets (base, react, node, react-native)
-│   ├── config-eslint    ESLint 9 flat-config presets matching the TS presets
-│   └── types            Domain types — backend owns, FE + mobile consume
+│   └── config-eslint    ESLint 9 flat-config presets matching the TS presets
+│   (add more on demand — e.g. a `types` package once a domain type is shared)
 ├── docs/         workflow docs + per-stack generation guides
 └── scripts/      one-off automation (rename, etc.)
 ```
@@ -75,7 +75,7 @@ Process docs (branching, commits, deployment, testing) live in [`docs/`](./docs/
 
 ## Need to add a shared package?
 
-If you find yourself wanting to share code across two or more apps, add it under `packages/` rather than copy-pasting. The existing packages are minimal and good references — copy `packages/types/` as a starting point.
+If you find yourself wanting to share code across two or more apps, add it under `packages/` rather than copy-pasting. The existing packages are minimal and good references — copy `packages/config-ts/` as a starting point. A common first addition is a `packages/types` package: the backend owns it, and the web/mobile apps import the shared domain types.
 
 ## License
 

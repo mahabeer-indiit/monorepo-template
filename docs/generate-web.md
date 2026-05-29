@@ -73,7 +73,6 @@ What stayed: `src/main.tsx`, `src/vite-env.d.ts`, `index.html`, `vite.config.ts`
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
-    "@template/types": "workspace:*",
     "axios": "^1.7.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -415,12 +414,18 @@ The reference behavior:
 
 - **GET** `/api/v1/hello` (a health-check ping) — fetched on page load via React Query
 - **POST** `/api/v1/hello` (greet by name) — triggered by a button click via React Query mutation
-- Both responses are typed using the shared `User` type from `@template/types`
+- Both responses are typed using a local `User` type (import it from a shared `packages/types` package once the backend exposes one)
 
 ### `src/features/hello/types/hello-response.ts`
 
 ```ts
-import type { User } from '@template/types';
+// Define the type locally for now. Once the backend shares it via a
+// `packages/types` package, replace this with: import type { User } from '@<org>/types';
+export type User = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
 
 export type HelloPing = {
   ok: boolean;
@@ -433,7 +438,7 @@ export type HelloResponse = {
 };
 ```
 
-> **Shared types rule.** Domain types come from `@template/types`. **Never redefine `User`, `Order`, etc. locally.** If you need a feature-specific projection, use `Pick<User, ...>` or a wrapper type.
+> **Shared types rule.** Domain types are **owned by the backend**. This template ships no shared types package — define the type locally for now, and the moment the backend exposes it for clients, lift it into a `packages/types` package (created on demand) and import from there. **Don't keep two hand-maintained copies of the same domain type.** For a feature-specific projection, use `Pick<User, ...>` or a wrapper type.
 
 ### `src/features/hello/api/use-hello-ping.ts`
 
@@ -760,7 +765,7 @@ Pin this somewhere visible:
 - ✅ Coupling rule — keep code inside the feature until **2+ features** need it
 - ✅ Tailwind utilities only — **no inline `style={{...}}`, no CSS modules, no styled-components**
 - ✅ No shared UI package — build components locally; adopt a UI library per app only with sign-off
-- ✅ Domain types from `@template/types` — **never redefine** `User`, `Order`, etc.
+- ✅ Domain types owned by the backend — define locally, lift to a `packages/types` package (created on demand) once shared; **never keep two copies**
 - ✅ All API calls through `src/lib/api-client.ts` + React Query hook in `features/<x>/api/` — **no `fetch()` in components**
 - ✅ Every `VITE_*` env var declared in `src/vite-env.d.ts`
 - ✅ Top-level `<ErrorBoundary>` wraps the app — render errors fall through, not blank screens
