@@ -88,3 +88,25 @@ This file is the AI's source of truth for how to work in this repo. Treat every 
 **Workflow docs** — process, not code
 
 - [`docs/branching-and-prs.md`](./docs/branching-and-prs.md), [`docs/commit-conventions.md`](./docs/commit-conventions.md), [`docs/feature-folder-template.md`](./docs/feature-folder-template.md), [`docs/deployment.md`](./docs/deployment.md), [`docs/testing.md`](./docs/testing.md), [`docs/event-naming.md`](./docs/event-naming.md)
+
+## 10. Setup gate — rename before any work (enforced)
+
+This template ships under the `@template/` npm scope. **A real project must be rebranded to its own org scope before any feature work begins** — apps must never ship named `@template/...`.
+
+This is enforced by a hook, not by trust:
+
+- [`.claude/settings.json`](./.claude/settings.json) registers a **`UserPromptSubmit` hook** that runs [`scripts/check-template-rename.sh`](./scripts/check-template-rename.sh) on every prompt.
+- If **any** `package.json#name` is still under the `@template/` scope, the hook **blocks the prompt before Claude sees it** (exit code 2) and tells the user to rename first. Claude literally cannot proceed.
+- The gate clears automatically once renamed — no restart needed.
+
+**To clear the gate, run the rename once for the whole monorepo:**
+
+```bash
+./scripts/rename.sh <your-org>      # e.g. ./scripts/rename.sh acme
+```
+
+This rewrites every `@template/` → `@<org>/` (root, shared packages, docs, and any apps). After it runs, prompts flow normally and newly generated apps inherit the `@<org>/` scope.
+
+**Working on the template itself?** Maintainers of this template repo keep the `@template/` scope on purpose, so the gate ships with a local opt-out: the gitignored marker file [`.claude/allow-template-scope`](./.claude/allow-template-scope) (or env var `ALLOW_TEMPLATE_SCOPE=1`). Both are local-only — they are **not** committed, so projects cloned from this template never inherit them and stay gated until they rename.
+
+> The gate is intentionally rename-proof: `scripts/check-template-rename.sh` never stores the literal `@template/` token, so `scripts/rename.sh`'s find+sed can't rewrite the guard and silently disable it.
