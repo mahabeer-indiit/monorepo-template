@@ -84,9 +84,16 @@ apps never ship as ${FORBIDDEN_SCOPE}. Until then, prompts are blocked.
 
 Packages still on ${FORBIDDEN_SCOPE}:
 ${offender_lines}
-Fix it once, for the whole monorepo:
+Fix it once, for the whole monorepo — copy the line for your shell and replace
+"acme" with your org scope:
 
-    ./scripts/rename.sh <your-org>        # e.g. ./scripts/rename.sh acme
+  • macOS / Linux / Git Bash / WSL:
+        ./scripts/rename.sh acme
+
+  • Windows PowerShell or CMD:
+        bash scripts/rename.sh acme
+    (If "bash" is not found, Git Bash ships with Git for Windows — use its full
+    path, e.g. "C:\Program Files\Git\bin\bash.exe" scripts/rename.sh acme)
 
 Then re-send your message — this gate clears automatically, no restart needed.
 EOF

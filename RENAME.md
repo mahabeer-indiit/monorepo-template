@@ -9,8 +9,16 @@ Across the entire repo, replace `@template/` with `@<your-org>/`. This renames e
 **Automated (recommended):**
 
 ```bash
+# macOS / Linux / Git Bash / WSL
 ./scripts/rename.sh <your-org>
 # example: ./scripts/rename.sh acme
+```
+
+```powershell
+# Windows PowerShell or CMD (rename.sh needs bash, which ships with Git for Windows)
+bash scripts/rename.sh <your-org>
+# if "bash" isn't on PATH, use the full Git Bash path:
+# "C:\Program Files\Git\bin\bash.exe" scripts/rename.sh <your-org>
 ```
 
 The script does steps 1–3 in one shot.

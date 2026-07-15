@@ -102,7 +102,13 @@ This is enforced by a hook, not by trust:
 **To clear the gate, run the rename once for the whole monorepo:**
 
 ```bash
+# macOS / Linux / Git Bash / WSL
 ./scripts/rename.sh <your-org>      # e.g. ./scripts/rename.sh acme
+```
+
+```powershell
+# Windows PowerShell / CMD — rename.sh runs through Git Bash's bash
+bash scripts/rename.sh <your-org>   # or: "C:\Program Files\Git\bin\bash.exe" scripts/rename.sh <your-org>
 ```
 
 This rewrites every `@template/` → `@<org>/` (root, shared packages, docs, and any apps). After it runs, prompts flow normally and newly generated apps inherit the `@<org>/` scope.
