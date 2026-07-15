@@ -96,7 +96,7 @@ This template ships under the `@template/` npm scope. **A real project must be r
 This is enforced by a hook, not by trust:
 
 - [`.claude/settings.json`](./.claude/settings.json) registers a **`UserPromptSubmit` hook** that runs [`scripts/check-template-rename.sh`](./scripts/check-template-rename.sh) on every prompt.
-- If **any** `package.json#name` is still under the `@template/` scope, the hook **blocks the prompt before Claude sees it** (exit code 2) and tells the user to rename first. Claude literally cannot proceed.
+- If **any** `package.json#name` is still under the `@template/` scope, the hook **blocks the prompt before Claude sees it** (via a `"decision":"block"` control response) and shows the user a `systemMessage` explaining they must rename first. Claude literally cannot proceed. The hook exits `0` and returns JSON on stdout rather than exiting `2`, because a non-zero UserPromptSubmit hook blocks silently — its stderr isn't reliably surfaced to the user, which is what left people staring at an unresponsive prompt with no explanation.
 - The gate clears automatically once renamed — no restart needed.
 
 **To clear the gate, run the rename once for the whole monorepo:**
