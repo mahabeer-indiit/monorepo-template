@@ -54,3 +54,36 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# --- Agent context & permissions -------------------------------------------
+# COMMITTED on purpose: AGENTS.md, CLAUDE.md, docs/decisions/, and every
+# .claude/settings.json — including the per-workspace-package copies, which are
+# what make the deny rules apply when Claude is started inside a package
+# (`pnpm agents:check` fails CI when one is missing). Only local overrides are
+# ignored. These need the `**/` prefix: a pattern containing a slash is anchored
+# to this file's directory, so plain `.claude/settings.local.json` does NOT match
+# apps/web/.claude/settings.local.json.
+**/.claude/settings.local.json
+**/.claude/allow-template-scope
+**/.claude/shell-snapshots/
+**/.claude/todos/
+**/.claude/statsig/
+**/.claude/history.jsonl
+**/.claude/projects/
+**/.claude/ide/
+# Other agents' local state (rules themselves live in AGENTS.md, committed)
+.gemini/settings.local.json
+.cursor/mcp.local.json
+.aider*
+.codex/
+
+# --- Codebase knowledge graph (graphify) -----------------------------------
+# Ignored by default; see docs/decisions/INDEX.md 0005. A 5-7MB graph.json
+# rewritten on every rebuild is bad git history, and snapshots accumulate
+# unpruned (250MB / 38 dated dirs measured in one of our repos).
+# If a project decides the graph IS shared infrastructure, invert this
+# deliberately and refresh it in CI — replace the line below with:
+#   graphify-out/*
+#   !graphify-out/graph.json
+#   !graphify-out/GRAPH_REPORT.md
+graphify-out/
