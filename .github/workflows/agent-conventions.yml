@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history: the decisions-entry check below uses a three-dot diff,
+          # which needs a merge base. The default shallow clone has none.
+          fetch-depth: 0
 
       # The load-bearing check: Claude Code reads .claude/settings.json from the
       # directory it was started in, with NO parent lookup. A workspace package
@@ -53,7 +57,7 @@ jobs:
       - name: Every AGENTS.md rule change carries a decisions entry
         if: github.event_name == 'pull_request'
         run: |
-          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          git fetch --no-tags origin "${{ github.base_ref }}"
           changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)
           if echo "$changed" | grep -qx 'AGENTS.md' && ! echo "$changed" | grep -q '^docs/decisions/'; then
             echo "::error file=AGENTS.md::AGENTS.md changed without a docs/decisions/ entry in the same PR (decision 0001)."
