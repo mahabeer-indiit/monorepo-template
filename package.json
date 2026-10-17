@@ -15,7 +15,9 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "agents:sync": "bash scripts/sync-claude-settings.sh",
+    "agents:check": "bash scripts/sync-claude-settings.sh --check"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

@@ -1,5 +1,36 @@
 # monorepo-template
 
+## Before you start: rename the scope
+
+This repo ships under a placeholder npm scope. Rename it first — one command, whole monorepo:
+
+```bash
+./scripts/rename.sh <your-org>          # macOS / Linux / Git Bash / WSL
+bash scripts/rename.sh <your-org>       # Windows (Git Bash or WSL required)
+```
+
+Until you do, a setup gate in `.claude/settings.json` keeps Claude Code from changing any
+file, and Claude will answer your first message by asking you to run the rename instead of
+doing the work. Nothing is broken — that is the gate talking. It clears itself the moment the
+rename is done; no restart needed.
+
+Two things to know up front:
+
+- **Say yes to the trust prompt.** On the very first launch Claude Code asks whether you trust
+  this folder (and may ask about a default permission mode). Hooks — including this gate — do
+  not run until you accept, and the dialog swallows anything you type while it is open. If your
+  first prompt seems to vanish, answer the dialog and send it again.
+- **Windows needs a bash.** The gate is a shell script, so `bash` must be on your PATH
+  (Git for Windows installs it at `C:\Program Files\Git\bin\bash.exe`, which is *not* on PATH
+  by default) or you need WSL. Without one the gate cannot run at all — it will not warn you,
+  it will simply be absent, and nothing stops the repo shipping under the placeholder scope.
+  Easiest fix: run Claude Code from a Git Bash or WSL shell.
+
+Working *on the template itself* rather than a project made from it? Create the gitignored
+marker `.claude/allow-template-scope`, or export `ALLOW_TEMPLATE_SCOPE=1`. Clones never inherit
+either, so they stay gated.
+
+
 Opinionated starter for fullstack **MERN + React Native** projects, wired with shared TypeScript / ESLint / domain-types packages and per-stack scaffolding guides.
 
 ## Stack

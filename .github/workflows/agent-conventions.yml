@@ -1,0 +1,65 @@
+name: agent-conventions
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+jobs:
+  agent-conventions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: the decisions-entry check below uses a three-dot diff,
+          # which needs a merge base. The default shallow clone has none.
+          fetch-depth: 0
+
+      # The load-bearing check: Claude Code reads .claude/settings.json from the
+      # directory it was started in, with NO parent lookup. A workspace package
+      # without its own copy runs with zero deny rules.
+      - name: Every workspace package carries the agent permission rules
+        run: bash scripts/sync-claude-settings.sh --check
+
+      # An invalid settings file is "skipped", not fatal — and under `claude -p`
+      # the whole file is ignored with no error. A typo disarms the rules silently.
+      - name: Every .claude/settings.json is valid JSON
+        run: |
+          fail=0
+          while IFS= read -r f; do
+            node -e 'JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"))' "$f" \
+              || { echo "::error file=$f::invalid JSON — Claude Code silently ignores a settings file that fails to parse, so the deny rules would not be in force"; fail=1; }
+          done < <(find . -path ./node_modules -prune -o -name settings.json -path '*/.claude/*' -print)
+          exit $fail
+
+      # Write()/MultiEdit()/NotebookEdit()/Glob() path rules validate clean, emit no
+      # warning, and are never consulted. Edit() covers every file-editing tool;
+      # Read() covers Glob. A rule in the wrong form is zero enforcement.
+      - name: No inert permission-rule forms
+        run: |
+          if grep -rnE '"(Write|MultiEdit|NotebookEdit|Glob)\(' --include=settings.json --exclude-dir=node_modules . ; then
+            echo "::error::Only Edit(<glob>) and Read(<glob>) path rules are enforced. Replace the rules above: Edit() covers Write/MultiEdit/NotebookEdit, Read() covers Glob."
+            exit 1
+          fi
+
+      - name: CLAUDE.md still imports AGENTS.md
+        run: |
+          grep -qxF '@AGENTS.md' CLAUDE.md \
+            || { echo "::error file=CLAUDE.md::CLAUDE.md must contain a bare '@AGENTS.md' import line (not inside backticks — imports are not evaluated in code spans)"; exit 1; }
+
+      - name: AGENTS.md stays under 200 lines
+        run: |
+          lines=$(wc -l < AGENTS.md)
+          echo "AGENTS.md: $lines lines"
+          [ "$lines" -le 200 ] \
+            || { echo "::error file=AGENTS.md::$lines lines (limit 200). Move prose out; keep only non-inferable directives."; exit 1; }
+
+      - name: Every AGENTS.md rule change carries a decisions entry
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          changed=$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)
+          if echo "$changed" | grep -qx 'AGENTS.md' && ! echo "$changed" | grep -q '^docs/decisions/'; then
+            echo "::error file=AGENTS.md::AGENTS.md changed without a docs/decisions/ entry in the same PR (decision 0001)."
+            exit 1
+          fi
